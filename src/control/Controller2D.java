@@ -1,5 +1,6 @@
 package control;
 
+import model.Point;
 import rasterize.*;
 import view.Panel;
 
@@ -7,10 +8,10 @@ import javax.swing.*;
 import java.awt.event.*;
 
 public class Controller2D implements Controller {
-
+    private Point lineStartPoint;
     private final Panel panel;
 
-    private int x,y;
+    private int x, y;
     private LineRasterizerGraphics rasterizer;
 
     public Controller2D(Panel panel) {
@@ -21,7 +22,7 @@ public class Controller2D implements Controller {
 
     public void initObjects(Raster raster) {
         rasterizer = new LineRasterizerGraphics(raster);
-     }
+    }
 
     @Override
     public void initListeners(Panel panel) {
@@ -34,9 +35,7 @@ public class Controller2D implements Controller {
                 if (e.isShiftDown()) {
                     //TODO
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
-                    rasterizer.drawLine(x,y,e.getX(),e.getY());
-                    x = e.getX();
-                    y = e.getY();
+                    //TODO
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
                     //TODO
                 } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -62,15 +61,68 @@ public class Controller2D implements Controller {
                 if (e.isControlDown()) return;
 
                 if (e.isShiftDown()) {
-                    //TODO
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        update();
+                        if (lineStartPoint == null) {
+                            lineStartPoint = new Point(e.getX(), e.getY());
+                        }
+                        // Počáteční bod
+                        Point p1 = lineStartPoint;
+                        // Koncový bod určený polohou myši
+                        Point p2 = new Point(e.getX(), e.getY());
+                        int dx = Math.abs(p2.x - p1.x);
+                        int dy = Math.abs(p2.y - p1.y);
+                        if (dx == dy) {
+                            //Úhlopříčná úsečka
+                            if ((p2.x > p1.x) && (p2.y > p1.y)) {
+                                // První kvadrant
+                                p2.x = p1.x + dx;
+                                p2.y = p1.y + dx;
+                            } else if ((p1.x > p2.x) && (p1.y > p2.y)) {
+                                // Třetí kvadrant
+                                p2.x = p1.x - dx;
+                                p2.y = p1.y - dx;
+                            } else if ((p1.x > p2.x) && (p2.y > p1.y)) {
+                                // Čtvrtý kvadrant
+                                p2.x = p1.x - dx;
+                                p2.y = p1.y + dx;
+                            } else {
+                                // Druhý kvadrant
+                                p2.x = p1.x + dx;
+                                p2.y = p1.y - dx;
+                            }
+                        } else if (dx > dy) {
+                            // Vodorovná úsečka
+                            p2.y = p1.y;
+                        } else {
+                            // Svislá úsečka
+                            p2.x = p1.x;
+                        }
+                        rasterizer.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+                    }
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
-                    //TODO
+                    update();
+                    if (lineStartPoint == null) {
+                        lineStartPoint = new Point(e.getX(), e.getY());
+                    }
+                    // Počáteční bod
+                    Point p1 = lineStartPoint;
+                    // Koncový bod určený polohou myši
+                    Point p2 = new Point(e.getX(), e.getY());
+
+                    rasterizer.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY());
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     //TODO
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
                     //TODO
                 }
-                update();
+                //update();
+            }
+        });
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                lineStartPoint = null;
             }
         });
 
@@ -95,13 +147,10 @@ public class Controller2D implements Controller {
     }
 
     private void update() {
-//        panel.clear();
-        //TODO
-
+        panel.clear();
     }
 
     private void hardClear() {
         panel.clear();
     }
-
 }
