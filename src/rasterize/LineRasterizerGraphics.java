@@ -15,5 +15,4 @@ public class LineRasterizerGraphics extends LineRasterizer {
         g.setColor(this.color);
         g.drawLine(x1, y1, x2, y2);
     }
-
 }

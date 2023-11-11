@@ -14,7 +14,6 @@ public class PolygonRasterizer {
     public void rasterize(Polygon polygon) {
         if (polygon.size() < 3)
             return;
-
         for (int i = 0; i < polygon.size(); i++) {
             int indexA = i;
             int indexB = (i + 1) % polygon.size();
