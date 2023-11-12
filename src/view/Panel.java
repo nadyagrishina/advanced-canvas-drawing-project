@@ -1,5 +1,4 @@
 package view;
-
 import rasterize.Raster;
 import rasterize.RasterBufferedImage;
 
@@ -33,6 +32,7 @@ public class Panel extends JPanel {
         // pro zájemce - co dělá observer - https://stackoverflow.com/a/1684476
     }
 
+    //Panel resize
     public void resize(){
         if (this.getWidth()<1 || this.getHeight()<1)
             return;
@@ -44,8 +44,8 @@ public class Panel extends JPanel {
         raster = newRaster;
     }
 
+    // časovač, který 30 krát za vteřinu obnoví obsah plátna aktuálním img
     private void setLoop() {
-        // časovač, který 30 krát za vteřinu obnoví obsah plátna aktuálním img
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
