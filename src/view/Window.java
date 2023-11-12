@@ -8,6 +8,7 @@ public class Window extends JFrame {
     private final Panel panel;
 
     public Window() {
+
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("UHK FIM PGRF : " + this.getClass().getName());
 
