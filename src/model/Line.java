@@ -1,5 +1,6 @@
 package model;
 
+
 public class Line {
     private final int  x1, x2, y1, y2;
     private final int color;

@@ -1,27 +1,26 @@
 package rasterize;
 
-import model.Line;
 import model.Point;
 import model.Polygon;
 
-import java.util.List;
+import java.awt.*;
 
 public class PolygonRasterizer {
-    private LineRasterizer lineRasterizer;
-    public PolygonRasterizer(LineRasterizer lineRasterizer) {
+    private final LineRasterizerGraphics lineRasterizer;
+    public PolygonRasterizer(LineRasterizerGraphics lineRasterizer) {
         this.lineRasterizer = lineRasterizer;
     }
-    public void rasterize(Polygon polygon) {
+    public void rasterize(Polygon polygon, Color color) {
         if (polygon.size() < 3)
             return;
+
         for (int i = 0; i < polygon.size(); i++) {
-            int indexA = i;
             int indexB = (i + 1) % polygon.size();
 
-            Point pA = polygon.getPoint(indexA);
+            Point pA = polygon.getPoint(i);
             Point pB = polygon.getPoint(indexB);
 
-            lineRasterizer.rasterize(new Line(pA, pB, 0xf658b8));
+            lineRasterizer.drawLine(pA.getX(), pA.getY(), pB.getX(), pB.getY(), color);
         }
     }
 }
