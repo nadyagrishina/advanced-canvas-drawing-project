@@ -3,8 +3,6 @@ package rasterize;
 import java.awt.*;
 
 public class LineRasterizerGraphics extends LineRasterizer {
-
-
     public LineRasterizerGraphics(Raster raster) {
         super(raster);
     }
@@ -15,5 +13,4 @@ public class LineRasterizerGraphics extends LineRasterizer {
         g.setColor(color);
         g.drawLine(x1, y1, x2, y2);
     }
-
 }
