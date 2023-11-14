@@ -1,9 +1,8 @@
 package control;
 
 import fill.ScanLine;
-import fill.SeedFill;
 import fill.SeedFillBorder;
-import model.Ellipse;
+import model.*;
 import model.Point;
 import model.Polygon;
 import model.Rectangle;
@@ -13,18 +12,25 @@ import view.Panel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Objects;
 
 public class Controller2D implements Controller {
+    private Mode clipMode = Mode.RECTANGLE;
     private Mode currentMode = Mode.POLYGON;
     private Mode currentModeFill = Mode.SEEDFILL;
     private Point lineStartPoint;
     private final Panel panel;
     private Polygon polygon;
-    private int x, y;
     private PolygonRasterizer polygonRasterizer;
     private LineRasterizerGraphics rasterizer;
+    private Ellipse ellipse;
+    private Rectangle rectangle;
+    private Triangle triangle;
+    private LineRasterizerGraphics previewLineRasterizer;
+    private Polygon temporaryPolygon;
+
     private enum Mode {
-        POLYGON, LINE, ELLIPSE, RECTANGLE, TRIANGLE, SCANLINE, SEEDFILL;
+        POLYGON, LINE, ELLIPSE, RECTANGLE, TRIANGLE, SCANLINE, SEEDFILL
     }
 
     public Controller2D(Panel panel) {
@@ -36,12 +42,14 @@ public class Controller2D implements Controller {
     public void initObjects(Raster raster) {
         rasterizer = new LineRasterizerGraphics(raster);
         polygonRasterizer = new PolygonRasterizer(rasterizer);
+        previewLineRasterizer = new LineRasterizerGraphics(raster);
         polygon = new Polygon();
-
+        temporaryPolygon = new Polygon();
     }
 
     @Override
     public void initListeners(Panel panel) {
+
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -51,22 +59,23 @@ public class Controller2D implements Controller {
                     //TODO
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
                     switch (currentMode) {
-//                        case POLYGON -> {
-//                            update();
-//                            Point p = new Point(e.getX(), e.getY());
-//                            polygon.addPoint(p);
-//                            if (polygon.size() >= 3) {
-//                                polygonRasterizer.rasterize(polygon, Color.CYAN);
-//                            }
-//                            panel.repaint();
-//                        }
+                        case POLYGON -> {
+                            previewLine(e.getX(), e.getY());
+                            if (polygon.size() == 0){
+                                polygon.addPoint(new Point(e.getX(), e.getY()));
+                            }
+                            polygonRasterizer.rasterize(polygon, Color.CYAN);
+                            if (polygon.size() == 2)
+                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
+                            panel.repaint();
+                        }
                     }
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
                     //TODO
                 } else if (SwingUtilities.isRightMouseButton(e)) {
-                    switch (currentModeFill){
+                    switch (currentModeFill) {
                         case SEEDFILL -> {
-                            SeedFillBorder seedFill = new SeedFillBorder(panel.getRaster(), Color.BLACK.getRGB(), Color.CYAN.getRGB(), Color.yellow, e.getX(), e.getY());
+                            SeedFillBorder seedFill = new SeedFillBorder(panel.getRaster(), Color.BLACK.getRGB(), Color.CYAN.getRGB(), Color.YELLOW, e.getX(), e.getY());
                             seedFill.fill();
                         }
                     }
@@ -92,7 +101,7 @@ public class Controller2D implements Controller {
                 if (e.isControlDown()) return;
 
                 if (e.isShiftDown()) {
-                    switch (currentMode){
+                    switch (currentMode) {
                         case LINE -> {
                             if (SwingUtilities.isLeftMouseButton(e)) {
                                 update();
@@ -153,7 +162,7 @@ public class Controller2D implements Controller {
                             polygonRasterizer.rasterize(rectangle, Color.green);
                             panel.repaint();
                         }
-                        case ELLIPSE ->{
+                        case ELLIPSE -> {
                             update();
                             if (lineStartPoint == null) {
                                 lineStartPoint = new Point(e.getX(), e.getY());
@@ -171,9 +180,8 @@ public class Controller2D implements Controller {
                             }
                         }
                     }
-
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
-                    switch (currentMode){
+                    switch (currentMode) {
                         case LINE -> {
                             update();
                             if (lineStartPoint == null) {
@@ -186,28 +194,10 @@ public class Controller2D implements Controller {
                             rasterizer.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY(), Color.yellow);
                         }
                         case POLYGON -> {
-                            update();
-                            Point currentPoint = new Point(e.getX(), e.getY());
-
-                            if (lineStartPoint == null) {
-                                lineStartPoint = currentPoint;
-                            } else {
-                                rasterizer.drawLine(
-                                        lineStartPoint.getX(), lineStartPoint.getY(),
-                                        currentPoint.getX(), currentPoint.getY(),
-                                        Color.yellow
-                                );
-                                panel.repaint();
-                            }
-                            polygon.addPoint(currentPoint);
-                            for (int i = 1; i < polygon.size(); i++) {
-                                Point p1 = polygon.getPoint(i - 1);
-                                Point p2 = polygon.getPoint(i);
-                                rasterizer.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY(), Color.yellow);
-                            }
-
-                            panel.repaint();
-
+                            previewLine(e.getX(), e.getY());
+                            if (polygon.size() == 2)
+                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
+                            polygonRasterizer.rasterize(polygon, Color.CYAN);
                         }
                         case RECTANGLE -> {
                             update();
@@ -217,12 +207,12 @@ public class Controller2D implements Controller {
                             Point p1 = lineStartPoint;
                             Point p3 = new Point(e.getX(), e.getY());
 
-                            Rectangle rectangle = new Rectangle(p1, p3);
+                            rectangle = new Rectangle(p1, p3);
 
                             polygonRasterizer.rasterize(rectangle, Color.green);
                             panel.repaint();
                         }
-                        case ELLIPSE ->{
+                        case ELLIPSE -> {
                             update();
                             if (lineStartPoint == null) {
                                 lineStartPoint = new Point(e.getX(), e.getY());
@@ -232,8 +222,20 @@ public class Controller2D implements Controller {
                                 int radiusY = Math.abs(lineStartPoint.getY() - e.getY()) / 2;
                                 int segments = 360;
 
-                                Ellipse ellipse = new Ellipse(center, radiusX, radiusY, segments);
+                                ellipse = new Ellipse(center, radiusX, radiusY, segments);
                                 polygonRasterizer.rasterize(ellipse, Color.ORANGE);
+                                panel.repaint();
+                            }
+                        }
+                        case TRIANGLE -> {
+                            update();
+                            if (lineStartPoint == null) {
+                                lineStartPoint = new Point(e.getX(), e.getY());
+                            } else {
+                                Point p1 = lineStartPoint;
+                                Point p2 = new Point(e.getX(), e.getY());
+                                triangle = new Triangle(p1, p2);
+                                polygonRasterizer.rasterize(triangle, Color.BLUE);
                                 panel.repaint();
                             }
                         }
@@ -251,7 +253,12 @@ public class Controller2D implements Controller {
             public void mouseReleased(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     lineStartPoint = null;
-
+                    if (Objects.requireNonNull(currentMode) == Mode.POLYGON) {
+                        Point p1 = new Point(e.getX(), e.getY());
+                        polygon.addPoint(p1);
+                        previewLine(e.getX(), e.getY());
+                        polygonRasterizer.rasterize(polygon, Color.CYAN);
+                    }
                 }
             }
         });
@@ -276,8 +283,15 @@ public class Controller2D implements Controller {
                     currentMode = Mode.ELLIPSE;
                 } else if (e.getKeyCode() == KeyEvent.VK_S) {
                     currentModeFill = Mode.SCANLINE;
-                    ScanLine scanLine = new ScanLine(panel.getRaster(), polygon);
-                    scanLine.fill();
+                    ScanLine scanLine = null;
+                    switch (currentMode) {
+                        case POLYGON -> scanLine = new ScanLine(panel.getRaster(), polygon);
+                        case ELLIPSE -> scanLine = new ScanLine(panel.getRaster(), ellipse);
+                        case TRIANGLE -> scanLine = new ScanLine(panel.getRaster(), triangle);
+                        case RECTANGLE -> scanLine = new ScanLine(panel.getRaster(), rectangle);
+                    }
+                    if (scanLine != null)
+                        scanLine.fill();
                 } else if (e.getKeyCode() == KeyEvent.VK_F) {
                     currentModeFill = Mode.SEEDFILL;
                 }
@@ -293,6 +307,43 @@ public class Controller2D implements Controller {
         });
     }
 
+    //    private void drawClipShape()
+//    {
+//        clipPolygon.clearPoints();
+//
+//        switch (clipMode)
+//        {
+//            // rectangle
+//            case RECTANGLE:
+//                clipPolygon.addPoint(new Point(40, 170));
+//                clipPolygon.addPoint(new Point(40, 690));
+//                clipPolygon.addPoint(new Point(560, 690));
+//                clipPolygon.addPoint(new Point(560, 170));
+//                break;
+//            // triangle
+//            case TRIANGLE:
+//                clipPolygon.addPoint(new Point(40, 280));
+//                clipPolygon.addPoint(new Point(40, 560));
+//                clipPolygon.addPoint(new Point(760, 560));
+//                clipPolygon.addPoint(new Point(760, 280));
+//                break;
+//            //ellipse
+//            case ELLIPSE:
+//                clipPolygon.addPoint(new Point(40, 690));
+//                clipPolygon.addPoint(new Point(560, 690));
+//                clipPolygon.addPoint(new Point(300, 170));
+//                break;
+//        }
+//    }
+    private void previewLine(int x, int y) {
+        update();
+        int size;
+        if (polygon.size() > 0) {
+            size = polygon.size();
+            previewLineRasterizer.rasterize(polygon.getPoint(size - 1).getX(), polygon.getPoint(size - 1).getY(), x, y, Color.PINK);
+            previewLineRasterizer.rasterize(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), x, y, Color.PINK);
+        }
+    }
     private void update() {
         //TODO
         panel.clear();
