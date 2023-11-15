@@ -5,9 +5,14 @@ import java.util.ArrayList;
 public class Polygon {
     private final ArrayList<Point> points;
 
+    public Polygon(ArrayList<Point> points) {
+        this.points = points;
+    }
+
     public Polygon() {
         this.points = new ArrayList<>();
     }
+
 
     public void addPoint(Point p) {
         this.points.add(p);
@@ -20,6 +25,11 @@ public class Polygon {
     public Point getPoint(int index) {
         return this.points.get(index);
     }
+
+    public ArrayList<Point> getPoints() {
+        return points;
+    }
+
 }
 
 
