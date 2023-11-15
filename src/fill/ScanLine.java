@@ -5,16 +5,19 @@ import model.Point;
 import model.Polygon;
 import rasterize.Raster;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class ScanLine implements Filler {
     private final Raster raster;
     private final Polygon polygon;
+    private final Color color;
 
-    public ScanLine(Raster raster, Polygon polygon) {
+    public ScanLine(Raster raster, Polygon polygon, Color color) {
         this.raster = raster;
         this.polygon = polygon;
+        this.color = color;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class ScanLine implements Filler {
                 int end = intersections.get(j + 1);
 
                 for (int k = start; k <= end; k++) {
-                    raster.setPixel(k, i, 0xff0000);
+                    raster.setPixel(k, i, color.getRGB());
                 }
             }
         }
