@@ -13,9 +13,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Objects;
+import java.util.ArrayList;
 
 public class Controller2D implements Controller {
-    private Mode clipMode = Mode.RECTANGLE;
+    private cutShape cutShapeMode = cutShape.CUTRECTANGLE;
     private Mode currentMode = Mode.POLYGON;
     private Mode currentModeFill = Mode.SEEDFILL;
     private Point lineStartPoint;
@@ -27,10 +28,20 @@ public class Controller2D implements Controller {
     private Rectangle rectangle;
     private Triangle triangle;
     private LineRasterizerGraphics previewLineRasterizer;
-    private Polygon temporaryPolygon;
+    private Polygon polygonToCut;
+    private Rectangle rectangle1;
+    private Triangle triangle1;
+    private LineClip lineClip;
+    private ScanLine scanLine;
+    private Polygon clippedPolygon;
+    private ScanLine scanLineCut;
+
 
     private enum Mode {
-        POLYGON, LINE, ELLIPSE, RECTANGLE, TRIANGLE, SCANLINE, SEEDFILL
+        POLYGON, LINE, ELLIPSE, RECTANGLE, TRIANGLE, SCANLINE, SEEDFILL, CUT
+    }
+    private enum cutShape{
+        CUTRECTANGLE, CUTTRIANGLE
     }
 
     public Controller2D(Panel panel) {
@@ -44,7 +55,9 @@ public class Controller2D implements Controller {
         polygonRasterizer = new PolygonRasterizer(rasterizer);
         previewLineRasterizer = new LineRasterizerGraphics(raster);
         polygon = new Polygon();
-        temporaryPolygon = new Polygon();
+        polygonToCut = new Polygon();
+        clippedPolygon = new Polygon();
+        lineClip = new LineClip();
     }
 
     @Override
@@ -60,13 +73,23 @@ public class Controller2D implements Controller {
                 } else if (SwingUtilities.isLeftMouseButton(e)) {
                     switch (currentMode) {
                         case POLYGON -> {
-                            previewLine(e.getX(), e.getY());
+                            previewLine(e.getX(), e.getY(), polygon);
                             if (polygon.size() == 0){
                                 polygon.addPoint(new Point(e.getX(), e.getY()));
                             }
                             polygonRasterizer.rasterize(polygon, Color.CYAN);
                             if (polygon.size() == 2)
                                 rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
+                            panel.repaint();
+                        }
+                        case CUT -> {
+                            previewLine(e.getX(), e.getY(), polygonToCut);
+                            if (polygonToCut.size() == 0) {
+                                polygonToCut.addPoint(new Point(e.getX(), e.getY()));
+                            }
+                            polygonRasterizer.rasterize(polygonToCut, Color.CYAN);
+                            if (scanLineCut != null)
+                                scanLineCut.fill();
                             panel.repaint();
                         }
                     }
@@ -91,7 +114,6 @@ public class Controller2D implements Controller {
                         //TODO
                     }
                 }
-
             }
         });
 
@@ -194,10 +216,21 @@ public class Controller2D implements Controller {
                             rasterizer.drawLine(p1.getX(), p1.getY(), p2.getX(), p2.getY(), Color.yellow);
                         }
                         case POLYGON -> {
-                            previewLine(e.getX(), e.getY());
+                            update();
+                            previewLine(e.getX(), e.getY(), polygon);
                             if (polygon.size() == 2)
                                 rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
                             polygonRasterizer.rasterize(polygon, Color.CYAN);
+                        }
+                        case CUT -> {
+                            update();
+                            previewLine(e.getX(), e.getY(), polygonToCut);
+                            if (polygonToCut.size() == 2)
+                                rasterizer.drawLine(polygonToCut.getPoint(0).getX(), polygonToCut.getPoint(0).getY(), polygonToCut.getPoint(1).getX(), polygonToCut.getPoint(1).getY(), Color.CYAN);
+                            polygonRasterizer.rasterize(polygonToCut, Color.CYAN);
+                            if (scanLineCut != null)
+                                scanLineCut.fill();
+                            panel.repaint();
                         }
                         case RECTANGLE -> {
                             update();
@@ -253,11 +286,33 @@ public class Controller2D implements Controller {
             public void mouseReleased(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     lineStartPoint = null;
-                    if (Objects.requireNonNull(currentMode) == Mode.POLYGON) {
-                        Point p1 = new Point(e.getX(), e.getY());
-                        polygon.addPoint(p1);
-                        previewLine(e.getX(), e.getY());
-                        polygonRasterizer.rasterize(polygon, Color.CYAN);
+                    switch (currentMode) {
+                        case POLYGON ->  {
+                            Point p1 = new Point(e.getX(), e.getY());
+                            polygon.addPoint(p1);
+                            previewLine(e.getX(), e.getY(), polygon);
+                            polygonRasterizer.rasterize(polygon, Color.CYAN);
+                        }
+                        case CUT -> {
+                            update();
+                            Point p1 = new Point(e.getX(), e.getY());
+                            polygonToCut.addPoint(p1);
+                            previewLine(e.getX(), e.getY(), polygonToCut);
+                            polygonRasterizer.rasterize(polygonToCut, Color.CYAN);
+                            switch (cutShapeMode){
+                                case CUTRECTANGLE -> {
+                                    ArrayList<Point> clippedPolygonPoints = lineClip.clipPoints(polygonToCut.getPoints(), rectangle1.getPoints());
+                                    clippedPolygon = new Polygon(clippedPolygonPoints);
+                                }
+                                case CUTTRIANGLE -> {
+                                    ArrayList<Point> clippedPolygonPoints = lineClip.clipPoints(polygonToCut.getPoints(), triangle1.getPoints());
+                                    clippedPolygon = new Polygon(clippedPolygonPoints);
+                                }
+                            }
+                            scanLineCut = new ScanLine(panel.getRaster(), clippedPolygon, Color.CYAN);
+                            scanLineCut.fill();
+                            panel.repaint();
+                        }
                     }
                 }
             }
@@ -266,11 +321,11 @@ public class Controller2D implements Controller {
         panel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                // na klávesu C vymazat plátno
                 if (e.getKeyCode() == KeyEvent.VK_C) {
                     panel.clear();
                     panel.repaint();
                     polygon = new Polygon();
+                    polygonToCut = new Polygon();
                 } else if (e.getKeyCode() == KeyEvent.VK_L) {
                     currentMode = Mode.LINE;
                 } else if (e.getKeyCode() == KeyEvent.VK_P) {
@@ -281,14 +336,25 @@ public class Controller2D implements Controller {
                     currentMode = Mode.RECTANGLE;
                 } else if (e.getKeyCode() == KeyEvent.VK_E) {
                     currentMode = Mode.ELLIPSE;
+                } else if (e.getKeyCode() == KeyEvent.VK_W) {
+                    currentMode = Mode.CUT;
+                    panel.repaint();
+                } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                    switch (cutShapeMode) {
+                        case CUTRECTANGLE -> {cutShapeMode = cutShape.CUTTRIANGLE; }
+                        case CUTTRIANGLE -> {cutShapeMode = cutShape.CUTRECTANGLE;}
+                    }
+                    polygonToCut = new Polygon();
+                    clippedPolygon = new Polygon();
+                    scanLineCut = new ScanLine(panel.getRaster(), clippedPolygon, Color.CYAN);
                 } else if (e.getKeyCode() == KeyEvent.VK_S) {
                     currentModeFill = Mode.SCANLINE;
-                    ScanLine scanLine = null;
+                    scanLine = null;
                     switch (currentMode) {
-                        case POLYGON -> scanLine = new ScanLine(panel.getRaster(), polygon);
-                        case ELLIPSE -> scanLine = new ScanLine(panel.getRaster(), ellipse);
-                        case TRIANGLE -> scanLine = new ScanLine(panel.getRaster(), triangle);
-                        case RECTANGLE -> scanLine = new ScanLine(panel.getRaster(), rectangle);
+                        case POLYGON -> scanLine = new ScanLine(panel.getRaster(), polygon, Color.decode("#7E77AB"));
+                        case ELLIPSE -> scanLine = new ScanLine(panel.getRaster(), ellipse, Color.decode("#7E77AB"));
+                        case TRIANGLE -> scanLine = new ScanLine(panel.getRaster(), triangle, Color.decode("#6DA800"));
+                        case RECTANGLE -> scanLine = new ScanLine(panel.getRaster(), rectangle, Color.decode("#005C4E"));
                     }
                     if (scanLine != null)
                         scanLine.fill();
@@ -307,35 +373,24 @@ public class Controller2D implements Controller {
         });
     }
 
-    //    private void drawClipShape()
-//    {
-//        clipPolygon.clearPoints();
-//
-//        switch (clipMode)
-//        {
-//            // rectangle
-//            case RECTANGLE:
-//                clipPolygon.addPoint(new Point(40, 170));
-//                clipPolygon.addPoint(new Point(40, 690));
-//                clipPolygon.addPoint(new Point(560, 690));
-//                clipPolygon.addPoint(new Point(560, 170));
-//                break;
-//            // triangle
-//            case TRIANGLE:
-//                clipPolygon.addPoint(new Point(40, 280));
-//                clipPolygon.addPoint(new Point(40, 560));
-//                clipPolygon.addPoint(new Point(760, 560));
-//                clipPolygon.addPoint(new Point(760, 280));
-//                break;
-//            //ellipse
-//            case ELLIPSE:
-//                clipPolygon.addPoint(new Point(40, 690));
-//                clipPolygon.addPoint(new Point(560, 690));
-//                clipPolygon.addPoint(new Point(300, 170));
-//                break;
-//        }
-//    }
-    private void previewLine(int x, int y) {
+    public void drawStaticShapes(){
+        switch (currentMode){
+            case CUT -> {
+                switch (cutShapeMode) {
+                    case CUTRECTANGLE -> {
+                        rectangle1 = new Rectangle(new Point(50, 50), new Point(400, 400));
+                        polygonRasterizer.rasterize(rectangle1, Color.BLUE);
+                    }
+                    case CUTTRIANGLE -> {
+                        triangle1 = new Triangle(new Point(200, 100), new Point(200, 400));
+                        polygonRasterizer.rasterize(triangle1, Color.BLUE);
+                    }
+                }
+            }
+        }
+    }
+
+    private void previewLine(int x, int y, Polygon polygon) {
         update();
         int size;
         if (polygon.size() > 0) {
@@ -344,12 +399,14 @@ public class Controller2D implements Controller {
             previewLineRasterizer.rasterize(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), x, y, Color.PINK);
         }
     }
-    private void update() {
-        //TODO
-        panel.clear();
-    }
 
-    private void hardClear() {
+
+    private void update() {
+        if (Objects.requireNonNull(currentMode) == Mode.CUT){
+            panel.clear();
+            drawStaticShapes();
+            return;
+        }
         panel.clear();
     }
 }
