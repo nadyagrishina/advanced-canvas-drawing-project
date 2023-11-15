@@ -49,10 +49,10 @@ public class ScanLine implements Filler {
         for (int i = yMin; i <= yMax; i++) {
             ArrayList<Integer> intersections = new ArrayList<>();
             for (Edge edge : edges) {
-                int x1 = edge.getX1();
-                int y1 = edge.getY1();
-                int x2 = edge.getX2();
-                int y2 = edge.getY2();
+                int x1 = edge.x1();
+                int y1 = edge.y1();
+                int x2 = edge.x2();
+                int y2 = edge.y2();
 
                 if ((y1 <= i && i < y2) || (y2 <= i && i < y1)) {
                     int xIntersection = (int) (x1 + (double) (x2 - x1) / (y2 - y1) * (i - y1));

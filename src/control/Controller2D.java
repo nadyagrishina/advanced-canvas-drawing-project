@@ -40,7 +40,8 @@ public class Controller2D implements Controller {
     private enum Mode {
         POLYGON, LINE, ELLIPSE, RECTANGLE, TRIANGLE, SCANLINE, SEEDFILL, CUT
     }
-    private enum cutShape{
+
+    private enum cutShape {
         CUTRECTANGLE, CUTTRIANGLE
     }
 
@@ -68,18 +69,17 @@ public class Controller2D implements Controller {
             public void mousePressed(MouseEvent e) {
                 if (e.isControlDown()) return;
 
-                if (e.isShiftDown()) {
-                    //TODO
-                } else if (SwingUtilities.isLeftMouseButton(e)) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
                     switch (currentMode) {
                         case POLYGON -> {
                             previewLine(e.getX(), e.getY(), polygon);
-                            if (polygon.size() == 0){
+                            if (polygon.size() == 0) {
                                 polygon.addPoint(new Point(e.getX(), e.getY()));
                             }
                             polygonRasterizer.rasterize(polygon, Color.CYAN);
                             if (polygon.size() == 2)
-                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
+                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(),
+                                        polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
                             panel.repaint();
                         }
                         case CUT -> {
@@ -93,25 +93,11 @@ public class Controller2D implements Controller {
                             panel.repaint();
                         }
                     }
-                } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                    //TODO
                 } else if (SwingUtilities.isRightMouseButton(e)) {
-                    switch (currentModeFill) {
-                        case SEEDFILL -> {
-                            SeedFillBorder seedFill = new SeedFillBorder(panel.getRaster(), Color.BLACK.getRGB(), Color.CYAN.getRGB(), Color.YELLOW, e.getX(), e.getY());
-                            seedFill.fill();
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.isControlDown()) {
-                    if (SwingUtilities.isLeftMouseButton(e)) {
-                        //TODO
-                    } else if (SwingUtilities.isRightMouseButton(e)) {
-                        //TODO
+                    if (Objects.requireNonNull(currentModeFill) == Mode.SEEDFILL) {
+                        SeedFillBorder seedFill = new SeedFillBorder(panel.getRaster(), Color.BLACK.getRGB(),
+                                Color.CYAN.getRGB(), Color.YELLOW, e.getX(), e.getY());
+                        seedFill.fill();
                     }
                 }
             }
@@ -189,9 +175,11 @@ public class Controller2D implements Controller {
                             if (lineStartPoint == null) {
                                 lineStartPoint = new Point(e.getX(), e.getY());
                             } else {
-                                Point center = new Point((lineStartPoint.getX() + e.getX()) / 2, (lineStartPoint.getY() + e.getY()) / 2);
+                                Point center = new Point((lineStartPoint.getX() + e.getX()) / 2,
+                                        (lineStartPoint.getY() + e.getY()) / 2);
                                 int radiusX, radiusY;
-                                int diameter = Math.min(Math.abs(lineStartPoint.getX() - e.getX()), Math.abs(lineStartPoint.getY() - e.getY()));
+                                int diameter = Math.min(Math.abs(lineStartPoint.getX() - e.getX()),
+                                        Math.abs(lineStartPoint.getY() - e.getY()));
                                 radiusX = diameter / 2;
                                 radiusY = diameter / 2;
                                 int segments = 360;
@@ -219,14 +207,16 @@ public class Controller2D implements Controller {
                             update();
                             previewLine(e.getX(), e.getY(), polygon);
                             if (polygon.size() == 2)
-                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
+                                rasterizer.drawLine(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(),
+                                        polygon.getPoint(1).getX(), polygon.getPoint(1).getY(), Color.CYAN);
                             polygonRasterizer.rasterize(polygon, Color.CYAN);
                         }
                         case CUT -> {
                             update();
                             previewLine(e.getX(), e.getY(), polygonToCut);
                             if (polygonToCut.size() == 2)
-                                rasterizer.drawLine(polygonToCut.getPoint(0).getX(), polygonToCut.getPoint(0).getY(), polygonToCut.getPoint(1).getX(), polygonToCut.getPoint(1).getY(), Color.CYAN);
+                                rasterizer.drawLine(polygonToCut.getPoint(0).getX(), polygonToCut.getPoint(0).getY(),
+                                        polygonToCut.getPoint(1).getX(), polygonToCut.getPoint(1).getY(), Color.CYAN);
                             polygonRasterizer.rasterize(polygonToCut, Color.CYAN);
                             if (scanLineCut != null)
                                 scanLineCut.fill();
@@ -250,7 +240,8 @@ public class Controller2D implements Controller {
                             if (lineStartPoint == null) {
                                 lineStartPoint = new Point(e.getX(), e.getY());
                             } else {
-                                Point center = new Point((lineStartPoint.getX() + e.getX()) / 2, (lineStartPoint.getY() + e.getY()) / 2);
+                                Point center = new Point((lineStartPoint.getX() + e.getX()) / 2,
+                                        (lineStartPoint.getY() + e.getY()) / 2);
                                 int radiusX = Math.abs(lineStartPoint.getX() - e.getX()) / 2;
                                 int radiusY = Math.abs(lineStartPoint.getY() - e.getY()) / 2;
                                 int segments = 360;
@@ -273,12 +264,7 @@ public class Controller2D implements Controller {
                             }
                         }
                     }
-                } else if (SwingUtilities.isRightMouseButton(e)) {
-                    //TODO
-                } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                    //TODO
                 }
-                //update();
             }
         });
         panel.addMouseListener(new MouseAdapter() {
@@ -287,7 +273,7 @@ public class Controller2D implements Controller {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     lineStartPoint = null;
                     switch (currentMode) {
-                        case POLYGON ->  {
+                        case POLYGON -> {
                             Point p1 = new Point(e.getX(), e.getY());
                             polygon.addPoint(p1);
                             previewLine(e.getX(), e.getY(), polygon);
@@ -299,13 +285,15 @@ public class Controller2D implements Controller {
                             polygonToCut.addPoint(p1);
                             previewLine(e.getX(), e.getY(), polygonToCut);
                             polygonRasterizer.rasterize(polygonToCut, Color.CYAN);
-                            switch (cutShapeMode){
+                            switch (cutShapeMode) {
                                 case CUTRECTANGLE -> {
-                                    ArrayList<Point> clippedPolygonPoints = lineClip.clipPoints(polygonToCut.getPoints(), rectangle1.getPoints());
+                                    ArrayList<Point> clippedPolygonPoints =
+                                            lineClip.clipPoints(polygonToCut.getPoints(), rectangle1.getPoints());
                                     clippedPolygon = new Polygon(clippedPolygonPoints);
                                 }
                                 case CUTTRIANGLE -> {
-                                    ArrayList<Point> clippedPolygonPoints = lineClip.clipPoints(polygonToCut.getPoints(), triangle1.getPoints());
+                                    ArrayList<Point> clippedPolygonPoints =
+                                            lineClip.clipPoints(polygonToCut.getPoints(), triangle1.getPoints());
                                     clippedPolygon = new Polygon(clippedPolygonPoints);
                                 }
                             }
@@ -341,8 +329,8 @@ public class Controller2D implements Controller {
                     panel.repaint();
                 } else if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
                     switch (cutShapeMode) {
-                        case CUTRECTANGLE -> {cutShapeMode = cutShape.CUTTRIANGLE; }
-                        case CUTTRIANGLE -> {cutShapeMode = cutShape.CUTRECTANGLE;}
+                        case CUTRECTANGLE -> cutShapeMode = cutShape.CUTTRIANGLE;
+                        case CUTTRIANGLE -> cutShapeMode = cutShape.CUTRECTANGLE;
                     }
                     polygonToCut = new Polygon();
                     clippedPolygon = new Polygon();
@@ -354,7 +342,8 @@ public class Controller2D implements Controller {
                         case POLYGON -> scanLine = new ScanLine(panel.getRaster(), polygon, Color.decode("#7E77AB"));
                         case ELLIPSE -> scanLine = new ScanLine(panel.getRaster(), ellipse, Color.decode("#7E77AB"));
                         case TRIANGLE -> scanLine = new ScanLine(panel.getRaster(), triangle, Color.decode("#6DA800"));
-                        case RECTANGLE -> scanLine = new ScanLine(panel.getRaster(), rectangle, Color.decode("#005C4E"));
+                        case RECTANGLE ->
+                                scanLine = new ScanLine(panel.getRaster(), rectangle, Color.decode("#005C4E"));
                     }
                     if (scanLine != null)
                         scanLine.fill();
@@ -373,18 +362,16 @@ public class Controller2D implements Controller {
         });
     }
 
-    public void drawStaticShapes(){
-        switch (currentMode){
-            case CUT -> {
-                switch (cutShapeMode) {
-                    case CUTRECTANGLE -> {
-                        rectangle1 = new Rectangle(new Point(50, 50), new Point(400, 400));
-                        polygonRasterizer.rasterize(rectangle1, Color.BLUE);
-                    }
-                    case CUTTRIANGLE -> {
-                        triangle1 = new Triangle(new Point(200, 100), new Point(200, 400));
-                        polygonRasterizer.rasterize(triangle1, Color.BLUE);
-                    }
+    public void drawStaticShapes() {
+        if (Objects.requireNonNull(currentMode) == Mode.CUT) {
+            switch (cutShapeMode) {
+                case CUTRECTANGLE -> {
+                    rectangle1 = new Rectangle(new Point(50, 50), new Point(400, 400));
+                    polygonRasterizer.rasterize(rectangle1, Color.BLUE);
+                }
+                case CUTTRIANGLE -> {
+                    triangle1 = new Triangle(new Point(200, 100), new Point(200, 400));
+                    polygonRasterizer.rasterize(triangle1, Color.BLUE);
                 }
             }
         }
@@ -395,14 +382,14 @@ public class Controller2D implements Controller {
         int size;
         if (polygon.size() > 0) {
             size = polygon.size();
-            previewLineRasterizer.rasterize(polygon.getPoint(size - 1).getX(), polygon.getPoint(size - 1).getY(), x, y, Color.PINK);
+            previewLineRasterizer.rasterize(polygon.getPoint(size - 1).getX(), polygon.getPoint(size - 1).getY(), x,
+                    y, Color.PINK);
             previewLineRasterizer.rasterize(polygon.getPoint(0).getX(), polygon.getPoint(0).getY(), x, y, Color.PINK);
         }
     }
 
-
     private void update() {
-        if (Objects.requireNonNull(currentMode) == Mode.CUT){
+        if (Objects.requireNonNull(currentMode) == Mode.CUT) {
             panel.clear();
             drawStaticShapes();
             return;

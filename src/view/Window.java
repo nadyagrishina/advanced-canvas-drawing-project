@@ -12,14 +12,16 @@ public class Window extends JFrame {
                 "<html>" +
                         "<style>" +
                         "strong { color: #004C99;}" +
-                        "p { color: #202020; font-size: 11px; margin: 5px 0;}" +
+                        "p { color: #202020; font-size: 11px; margin: 4px 0;}" +
                         "</style>" +
                         "<div style='width: 180px; padding: 5px 10px;'>" +
-                        "<p>Right click to Fill <br> default mode: Polygon</p>" +
+                        "<p>Right click to SeedFill <br> default mode: Polygon</p>" +
                         "<p><strong>[Shift]</strong> " +
                         "<p><b>In Line mode:</b> draws a horizontal, vertical, or diagonal line.</p>" +
                         "<p><b>In Rectangle mode:</b> draws a square.</p>" +
                         "<p><b>In Ellipse mode:</b> draws a circle.</p>" +
+                        "<p><strong>[Control]</strong> " +
+                        "<p><b>In Cut Mode:</b> Changes a Cut Shape.</p>" +
                         "<p><strong>[C]</strong> Delete Canvas and all textures.</p>" +
                         "<p><strong>[L]</strong> Line mode</p>" +
                         "<p><strong>[P]</strong> Polygon mode.</p>" +
@@ -27,7 +29,7 @@ public class Window extends JFrame {
                         "<p><strong>[R]</strong> Rectangle mode.</p>" +
                         "<p><strong>[E]</strong> Ellipse mode.</p>" +
                         "<p><strong>[W]</strong> Cut mode</p>" +
-                        "<p style = 'margin: 40px 0 5px;'><strong style = 'color: #990000;'>[F]</strong> Enable SeedFiller.</p>" +
+                        "<p style = 'margin: 10px 0 5px;'><strong style = 'color: #990000;'>[F]</strong> Enable SeedFiller.</p>" +
                         "<p><strong style = 'color: #990000;'>[S]</strong> Enable ScanLine.</p>" +
                         "</div>"
         );
