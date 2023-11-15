@@ -10,27 +10,25 @@ public class Window extends JFrame {
     public Window() {
         JLabel keyDescriptionLabel = new JLabel(
                 "<html>" +
+                        "<style>" +
+                        "strong { color: #004C99;}" +
+                        "p { color: #202020; font-size: 11px; margin: 5px 0;}" +
+                        "</style>" +
                         "<div style='width: 180px; padding: 5px 10px;'>" +
                         "<p>Right click to Fill <br> default mode: Polygon</p>" +
-                        "<br>" +
-                        "<p><strong>[Shift]</strong> In Line mode, draw a horizontal, vertical, or diagonal line.</p>" +
-                        "<br>" +
+                        "<p><strong>[Shift]</strong> " +
+                        "<p><b>In Line mode:</b> draws a horizontal, vertical, or diagonal line.</p>" +
+                        "<p><b>In Rectangle mode:</b> draws a square.</p>" +
+                        "<p><b>In Ellipse mode:</b> draws a circle.</p>" +
                         "<p><strong>[C]</strong> Delete Canvas and all textures.</p>" +
-                        "<br>" +
                         "<p><strong>[L]</strong> Line mode</p>" +
-                        "<br>" +
                         "<p><strong>[P]</strong> Polygon mode.</p>" +
-                        "<br>" +
                         "<p><strong>[T]</strong> Triangle mode.</p>" +
-                        "<br>" +
                         "<p><strong>[R]</strong> Rectangle mode.</p>" +
-                        "<br>" +
                         "<p><strong>[E]</strong> Ellipse mode.</p>" +
-                        "<br>" + "<br>" + "<br>" + "<br>" +
-                        "<p><strong>[F]</strong> Enable SeedFiller.</p>" +
-                        "<br>" +
-                        "<p><strong>[S]</strong> Enable ScanLine.</p>" +
-                        "<br>" +
+                        "<p><strong>[W]</strong> Cut mode</p>" +
+                        "<p style = 'margin: 40px 0 5px;'><strong style = 'color: #990000;'>[F]</strong> Enable SeedFiller.</p>" +
+                        "<p><strong style = 'color: #990000;'>[S]</strong> Enable ScanLine.</p>" +
                         "</div>"
         );
         JPanel descriptionPanel = new JPanel();
