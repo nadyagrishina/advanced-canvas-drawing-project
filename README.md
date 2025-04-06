@@ -1,7 +1,7 @@
 # 🎨 Advanced Canvas Drawing Project
 
 **Author:** Nadezhda Grishina  
-**Version:** 2023.v2
+**Version:** 2023
 
 ---
 
